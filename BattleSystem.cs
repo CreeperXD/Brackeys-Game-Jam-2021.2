@@ -10,33 +10,36 @@ public class BattleSystem : MonoBehaviour {
     public BattleState state;
 
     //GameObjects to reference prefabs, Units for actual logics
-    public GameObject Chaos1;
-    public GameObject Order1;
-    Unit ChaosUnit1;
-    Unit OrderUnit1;
+    public GameObject Chaos;
+    public GameObject Order;
+    Unit ChaosUnit;
+    Unit OrderUnit;
 
-    public Transform ChaosBattleStation1;
-    public Transform OrderBattleStation1;
+    public Transform ChaosBattleStation;
+    public Transform OrderBattleStation;
 
-    public BattleHUD Chaos1HUD;
-    public BattleHUD Order1HUD;
+    public BattleHUD ChaosHUD;
+    public BattleHUD OrderHUD;
+
+    public Text Dialogue;
 
     // Start is called before the first frame update
     void Start() {
+        Dialogue.text = "A standoff between Chaos and Order!";
         state = BattleState.START;
         StartCoroutine(SetupBattle());
     }
 
     IEnumerator SetupBattle() {
         //These -GO are temporary for transfering purposes
-        GameObject Chaos1GO = Instantiate(Chaos1, ChaosBattleStation1);
-        ChaosUnit1 = Chaos1GO.GetComponent<Unit>();
+        GameObject ChaosGO = Instantiate(Chaos, ChaosBattleStation);
+        ChaosUnit = ChaosGO.GetComponent<Unit>();
 
-        GameObject Order1GO = Instantiate(Order1, OrderBattleStation1);
-        OrderUnit1 = Order1GO.GetComponent<Unit>();
+        GameObject OrderGO = Instantiate(Order, OrderBattleStation);
+        OrderUnit = OrderGO.GetComponent<Unit>();
 
-        Chaos1HUD.SetHUD(ChaosUnit1);
-        Order1HUD.SetHUD(OrderUnit1);
+        ChaosHUD.SetHUD(ChaosUnit);
+        OrderHUD.SetHUD(OrderUnit);
 
         yield return new WaitForSeconds(5f);
 
@@ -45,7 +48,7 @@ public class BattleSystem : MonoBehaviour {
     }
 
     void PlayerTurn() {
-
+        Dialogue.text = "Chaos' turn...";
     }
 
     public void OnAttackButton() {
@@ -54,20 +57,50 @@ public class BattleSystem : MonoBehaviour {
         StartCoroutine(PlayerAttack());
     }
 
+    public void OnHealButton() {
+        if(state != BattleState.PLAYERTURN) return;
+
+        StartCoroutine(PlayerHeal());
+    }
+
     IEnumerator PlayerAttack() {
+        Dialogue.text = "Chaos launched an assault!";
         state = BattleState.UNINTERACTABLE;
 
         yield return new WaitForSeconds(2.5f);
 
-        OrderUnit1.TakeDamage(ChaosUnit1.Damage);
-        Order1HUD.SetHUD(OrderUnit1);
+        Dialogue.text = "Order took some damage!";
+        OrderUnit.TakeDamage(ChaosUnit.Damage);
+        OrderHUD.SetHUD(OrderUnit);
 
         yield return new WaitForSeconds(2.5f);
 
-        if(OrderUnit1.Alive()) {
+        DidOrderSurvive();
+    }
+
+    IEnumerator PlayerHeal() {
+        Dialogue.text = "Chaos is requesting support!";
+        state = BattleState.UNINTERACTABLE;
+
+        yield return new WaitForSeconds(2.5f);
+
+        Dialogue.text = "Chaos recovered some strength!";
+        ChaosUnit.Heal(ChaosUnit.Damage);
+        ChaosHUD.SetHUD(ChaosUnit);
+
+        yield return new WaitForSeconds(2.5f);
+
+        DidOrderSurvive();
+    }
+
+    void DidOrderSurvive() {
+        if(OrderUnit.Alive()) {
             state = BattleState.ENEMYTURN;
             EnemyTurn();
-        } else state = BattleState.WON;
+        } else {
+            Dialogue.text = "Let there be Chaos!";
+            state = BattleState.WON;
+        }
     }
 
     int choice;
@@ -86,30 +119,38 @@ public class BattleSystem : MonoBehaviour {
     }
 
     IEnumerator EnemyAttack() {
+        Dialogue.text = "Order retaliated!";
         yield return new WaitForSeconds(2.5f);
 
-        ChaosUnit1.TakeDamage(OrderUnit1.Damage);
-        Chaos1HUD.SetHUD(ChaosUnit1);
+        Dialogue.text = "Chaos took some damage!";
+        ChaosUnit.TakeDamage(OrderUnit.Damage);
+        ChaosHUD.SetHUD(ChaosUnit);
 
         yield return new WaitForSeconds(2.5f);
 
-        if(ChaosUnit1.Alive()) {
-            state = BattleState.PLAYERTURN;
-            PlayerTurn();
-        } else state = BattleState.LOST;
+        DidChaosSurvive();
     }
 
     IEnumerator EnemyHeal() {
+        Dialogue.text = "Order is requesting backup!";
         yield return new WaitForSeconds(2.5f);
 
-        OrderUnit1.Heal(OrderUnit1.Damage);
-        Order1HUD.SetHUD(OrderUnit1);
+        Dialogue.text = "Order recovered some strength!";
+        OrderUnit.Heal(OrderUnit.Damage);
+        OrderHUD.SetHUD(OrderUnit);
 
         yield return new WaitForSeconds(2.5f);
 
-        if(ChaosUnit1.Alive()) {
+        DidChaosSurvive();
+    }
+
+    void DidChaosSurvive() {
+        if(ChaosUnit.Alive()) {
             state = BattleState.PLAYERTURN;
             PlayerTurn();
-        } else state = BattleState.LOST;
+        } else {
+            Dialogue.text = "Order shall prevail!";
+            state = BattleState.LOST;
+        }
     }
 }
