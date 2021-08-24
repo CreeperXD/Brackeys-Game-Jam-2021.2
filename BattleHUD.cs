@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class BattleHUD : MonoBehaviour {
     public Text Name;
+    public Text HealthNumbers;
     //Referencing the "HealthBar" script
     public HealthBar healthBar;
 
@@ -13,5 +14,7 @@ public class BattleHUD : MonoBehaviour {
 
         healthBar.SetMaxHealth(unit.MaxHP);
         healthBar.SetHealth(unit.CurrentHP);
+
+        HealthNumbers.text = unit.CurrentHP + " / " + unit.MaxHP;
     }
 }
