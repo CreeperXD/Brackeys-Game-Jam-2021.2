@@ -23,6 +23,8 @@ public class BattleSystem : MonoBehaviour {
 
     public Text Dialogue;
 
+    int Round;
+
     // Start is called before the first frame update
     void Start() {
         Dialogue.text = "A standoff between Chaos and Order!";
@@ -48,6 +50,7 @@ public class BattleSystem : MonoBehaviour {
     }
 
     void PlayerTurn() {
+        Round++;
         Dialogue.text = "Chaos' turn...";
     }
 
@@ -64,43 +67,57 @@ public class BattleSystem : MonoBehaviour {
     }
 
     public void OnButton3() {
-        Dialogue.text = "This skill is not unlocked(actually developed)... yet...";
+        if(state != BattleState.PLAYERTURN) return;
+
+        StartCoroutine(LeechingBite());
     }
 
     public void OnButton4() {
-        Dialogue.text = "This skill is not unlocked(actually developed)... yet...";
+        if(state != BattleState.PLAYERTURN) return;
+
+        StartCoroutine(ChaoticExplosions());
     }
 
     IEnumerator BasicAttack() {
-        Dialogue.text = "<unit> used \"Basic Attack\"!";
+        Dialogue.text = ChaosUnit.Name + " used \"Basic Attack\"!";
         state = BattleState.UNINTERACTABLE;
 
-        yield return new WaitForSeconds(2.5f);
+        StartCoroutine(ChaosUnit.BasicAttack(OrderUnit, OrderHUD));
 
-        OrderUnit.TakeDamage(ChaosUnit.Damage);
-        OrderHUD.SetHUD(OrderUnit);
-
-        yield return new WaitForSeconds(0.5f);
-
-        OrderUnit.TakeDamage(ChaosUnit.Damage);
-        OrderHUD.SetHUD(OrderUnit);
-
-        yield return new WaitForSeconds(2.5f);
+        yield return new WaitForSeconds(5);
 
         DidOrderSurvive();
     }
 
     IEnumerator BodyHardening() {
-        Dialogue.text = "<unit> used \"Body Hardening\"!";
+        Dialogue.text = ChaosUnit.Name + " used \"Body Hardening\"!";
         state = BattleState.UNINTERACTABLE;
 
-        yield return new WaitForSeconds(2.5f);
+        StartCoroutine(ChaosUnit.BodyHardening(ChaosHUD));
 
-        ChaosUnit.Heal((int)(ChaosUnit.Damage * 1.5f));
-        ChaosUnit.Defence += 0.5f;
-        ChaosHUD.SetHUD(ChaosUnit);
+        yield return new WaitForSeconds(5);
 
-        yield return new WaitForSeconds(2.5f);
+        DidOrderSurvive();
+    }
+
+    IEnumerator LeechingBite() {
+        Dialogue.text = ChaosUnit.Name + " used \"Leeching Bite\"!";
+        state = BattleState.UNINTERACTABLE;
+        
+        StartCoroutine(ChaosUnit.LeechingBite(OrderUnit, ChaosHUD, OrderHUD));
+
+        yield return new WaitForSeconds(5);
+
+        DidOrderSurvive();
+    }
+
+    IEnumerator ChaoticExplosions() {
+        Dialogue.text = ChaosUnit.Name + " used \"Chaotic Explosions\"!";
+        state = BattleState.UNINTERACTABLE;
+        
+        StartCoroutine(ChaosUnit.ChaoticExplosions(OrderUnit, OrderHUD));
+
+        yield return new WaitForSeconds(5);
 
         DidOrderSurvive();
     }
@@ -116,40 +133,25 @@ public class BattleSystem : MonoBehaviour {
     }
 
     public void EnemyTurn() {
-        if(OrderUnit.CurrentHP == 300) StartCoroutine(GearUp()); else StartCoroutine(BurstFire());
+        if(Round == 1) StartCoroutine(GearUp()); else StartCoroutine(BurstFire());
     }
 
     IEnumerator BurstFire() {
-        Dialogue.text = "<unit> used \"Burst Fire\"!";
+        Dialogue.text = OrderUnit.Name + " used \"Burst Fire\"!";
 
-        yield return new WaitForSeconds(2.5f);
+        StartCoroutine(OrderUnit.BurstFire(ChaosUnit, ChaosHUD));
 
-        ChaosUnit.TakeDamage(OrderUnit.Damage);
-        ChaosHUD.SetHUD(ChaosUnit);
-
-        yield return new WaitForSeconds(0.25f);
-
-        ChaosUnit.TakeDamage(OrderUnit.Damage);
-        ChaosHUD.SetHUD(ChaosUnit);
-
-        yield return new WaitForSeconds(0.25f);
-
-        ChaosUnit.TakeDamage(OrderUnit.Damage);
-        ChaosHUD.SetHUD(ChaosUnit);
-
-        yield return new WaitForSeconds(2.5f);
+        yield return new WaitForSeconds(5);
 
         DidChaosSurvive();
     }
 
     IEnumerator GearUp() {
-        Dialogue.text = "<unit> used \"Gear Up\"!";
+        Dialogue.text = OrderUnit.Name + " used \"Gear Up\"!";
 
-        yield return new WaitForSeconds(2.5f);
+        StartCoroutine(OrderUnit.GearUp());
 
-        OrderUnit.Defence += 0.25f;
-
-        yield return new WaitForSeconds(2.5f);
+        yield return new WaitForSeconds(5);
 
         DidChaosSurvive();
     }
