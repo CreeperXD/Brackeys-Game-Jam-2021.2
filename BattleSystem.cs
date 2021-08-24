@@ -9,7 +9,7 @@ public class BattleSystem : MonoBehaviour {
 
     public BattleState state;
 
-    //GameObjects to reference prefabs, Units for actual logics
+    //GameObjects to reference the unit prefabs, Units for actual logics
     public GameObject Chaos;
     public GameObject Order;
     Unit ChaosUnit;
@@ -51,25 +51,37 @@ public class BattleSystem : MonoBehaviour {
         Dialogue.text = "Chaos' turn...";
     }
 
-    public void OnAttackButton() {
+    public void OnButton1() {
         if(state != BattleState.PLAYERTURN) return;
 
-        StartCoroutine(PlayerAttack());
+        StartCoroutine(BasicAttack());
     }
 
-    public void OnHealButton() {
+    public void OnButton2() {
         if(state != BattleState.PLAYERTURN) return;
 
-        StartCoroutine(PlayerHeal());
+        StartCoroutine(BodyHardening());
     }
 
-    IEnumerator PlayerAttack() {
-        Dialogue.text = "Chaos launched an assault!";
+    public void OnButton3() {
+        Dialogue.text = "This skill is not unlocked(actually developed)... yet...";
+    }
+
+    public void OnButton4() {
+        Dialogue.text = "This skill is not unlocked(actually developed)... yet...";
+    }
+
+    IEnumerator BasicAttack() {
+        Dialogue.text = "<unit> used \"Basic Attack\"!";
         state = BattleState.UNINTERACTABLE;
 
         yield return new WaitForSeconds(2.5f);
 
-        Dialogue.text = "Order took some damage!";
+        OrderUnit.TakeDamage(ChaosUnit.Damage);
+        OrderHUD.SetHUD(OrderUnit);
+
+        yield return new WaitForSeconds(0.5f);
+
         OrderUnit.TakeDamage(ChaosUnit.Damage);
         OrderHUD.SetHUD(OrderUnit);
 
@@ -78,14 +90,14 @@ public class BattleSystem : MonoBehaviour {
         DidOrderSurvive();
     }
 
-    IEnumerator PlayerHeal() {
-        Dialogue.text = "Chaos is requesting support!";
+    IEnumerator BodyHardening() {
+        Dialogue.text = "<unit> used \"Body Hardening\"!";
         state = BattleState.UNINTERACTABLE;
 
         yield return new WaitForSeconds(2.5f);
 
-        Dialogue.text = "Chaos recovered some strength!";
-        ChaosUnit.Heal(ChaosUnit.Damage);
+        ChaosUnit.Heal((int)(ChaosUnit.Damage * 1.5f));
+        ChaosUnit.Defence += 0.5f;
         ChaosHUD.SetHUD(ChaosUnit);
 
         yield return new WaitForSeconds(2.5f);
@@ -103,26 +115,25 @@ public class BattleSystem : MonoBehaviour {
         }
     }
 
-    int choice;
-
     public void EnemyTurn() {
-        choice++;
-        switch(choice) {
-            case 1:
-                StartCoroutine(EnemyAttack());
-                break;
-            case 2:
-                StartCoroutine(EnemyHeal());
-                choice -= 2;
-                break;
-        }
+        if(OrderUnit.CurrentHP == 300) StartCoroutine(GearUp()); else StartCoroutine(BurstFire());
     }
 
-    IEnumerator EnemyAttack() {
-        Dialogue.text = "Order retaliated!";
+    IEnumerator BurstFire() {
+        Dialogue.text = "<unit> used \"Burst Fire\"!";
+
         yield return new WaitForSeconds(2.5f);
 
-        Dialogue.text = "Chaos took some damage!";
+        ChaosUnit.TakeDamage(OrderUnit.Damage);
+        ChaosHUD.SetHUD(ChaosUnit);
+
+        yield return new WaitForSeconds(0.25f);
+
+        ChaosUnit.TakeDamage(OrderUnit.Damage);
+        ChaosHUD.SetHUD(ChaosUnit);
+
+        yield return new WaitForSeconds(0.25f);
+
         ChaosUnit.TakeDamage(OrderUnit.Damage);
         ChaosHUD.SetHUD(ChaosUnit);
 
@@ -131,13 +142,12 @@ public class BattleSystem : MonoBehaviour {
         DidChaosSurvive();
     }
 
-    IEnumerator EnemyHeal() {
-        Dialogue.text = "Order is requesting backup!";
+    IEnumerator GearUp() {
+        Dialogue.text = "<unit> used \"Gear Up\"!";
+
         yield return new WaitForSeconds(2.5f);
 
-        Dialogue.text = "Order recovered some strength!";
-        OrderUnit.Heal(OrderUnit.Damage);
-        OrderHUD.SetHUD(OrderUnit);
+        OrderUnit.Defence += 0.25f;
 
         yield return new WaitForSeconds(2.5f);
 
